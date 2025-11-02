@@ -77,14 +77,23 @@ function AppContent({ darkMode, setDarkMode }) {
         </Box>
       </Box>
 
-      {/* Main Content */}
-      <Box sx={{ pt: 16, px: 3 }}>
-        <Routes>
-          <Route path="/" element={<EncryptPage />} />
-          <Route path="/decrypt" element={<DecryptPage />} />
-          <Route path="/smart-decrypt" element={<SmartDecryptPage />} />
-        </Routes>
-      </Box>
+{/* Main Content */}
+<Box sx={{ pt: 16, px: 3 }}>
+  <Routes>
+    <Route
+      path="/"
+      element={<EncryptPage darkMode={darkMode} setDarkMode={setDarkMode} />}
+    />
+    <Route
+      path="/decrypt"
+      element={<DecryptPage darkMode={darkMode} setDarkMode={setDarkMode} />}
+    />
+    <Route
+      path="/smart-decrypt"
+      element={<SmartDecryptPage darkMode={darkMode} setDarkMode={setDarkMode} />}
+    />
+  </Routes>
+</Box>
     </Box>
   );
 }

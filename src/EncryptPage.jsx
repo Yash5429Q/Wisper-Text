@@ -1,123 +1,249 @@
-import { useState } from "react";
-import FileHandler from "./FileHandler";
-import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import React, { useState } from "react";
 import {
-  Typography, TextField, Button, Select, MenuItem, FormControl,
-  InputLabel, Box, IconButton, Snackbar
-} from "@mui/material";
-
-import {
-  caesarEncrypt, affineEncrypt, vigenereEncrypt,
-  railFenceEncrypt, columnarEncrypt,
-  cryptoJSEncrypt, naclEncrypt
+  vigenereEncrypt, railFenceEncrypt, columnarEncrypt,
+  atbashEncrypt, rot13Encrypt, playfairEncrypt,
+  hillEncrypt, autokeyEncrypt, beaufortEncrypt,
+  polybiusEncrypt, adfgvxEncrypt, baconEncrypt, xorEncrypt, teaEncrypt,
+  cryptoJSEncrypt, blowfishEncrypt, twofishEncrypt, rc5Encrypt, chacha20Encrypt
 } from "./ciphers";
 
-export default function EncryptPage() {
-  const [input, setInput] = useState("");
-  const [output, setOutput] = useState("");
-  const [cipher, setCipher] = useState("caesar");
-  const [key, setKey] = useState("");
-  const [extraKey, setExtraKey] = useState("");
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
+const cipherList = [
+  "Vigenère", "Rail Fence", "Columnar", "Atbash", "ROT13",
+  "Playfair", "Hill", "Autokey", "Beaufort", "Polybius",
+  "ADFGVX", "Bacon", "XOR", "TEA",
+  "AES", "DES", "TripleDES", "RC4",
+  "Blowfish", "Twofish", "RC5", "ChaCha20"
+];
 
-  const handleConvert = () => {
+const keyExplanations = {
+  "Vigenère": "Enter an alphabetic key, e.g. 'KEY'.",
+  "Rail Fence": "Enter a numeric key (number of rails), e.g. 3.",
+  "Columnar": "Enter a numeric or word key indicating column order, e.g. '3142' or 'WORD'.",
+  "Playfair": "Enter an alphabetic keyword, e.g. 'MONARCHY'.",
+  "Hill": "Enter numeric key matrix values, e.g. '3 3 2 5'.",
+  "Autokey": "Enter alphabetic key to start sequence, e.g. 'QUEEN'.",
+  "Beaufort": "Enter alphabetic key, e.g. 'FORT'.",
+  "Polybius": "Enter Polybius square key or leave default A–Z grid.",
+  "ADFGVX": "Enter 6x6 grid keyword, e.g. 'GERMAN', and transposition key.",
+  "Bacon": "No key required.",
+  "XOR": "Enter text or numeric passphrase, e.g. '123' or 'key'.",
+  "TEA": "Enter 16-character key, e.g. 'ABCDEFGHIJKLMNOP'.",
+  "AES": "Enter key (16/24/32 chars depending on AES variant).",
+  "DES": "Enter 8-character key for DES.",
+  "TripleDES": "Enter 16 or 24-character key.",
+  "RC4": "Enter passphrase string, e.g. 'secret'.",
+  "Blowfish": "Enter passphrase string, e.g. 'mykey'.",
+  "Twofish": "Enter passphrase string, e.g. 'secretkey'.",
+  "RC5": "Enter 16-character key for RC5 cipher.",
+  "ChaCha20": "Enter 32-character key for ChaCha20 cipher.",
+  "Atbash": "No key required.",
+  "ROT13": "No key required."
+};
+
+export default function EncryptPage({ darkMode, setDarkMode }) {
+  const [plainText, setPlainText] = useState("");
+  const [key, setKey] = useState("");
+  const [cipher, setCipher] = useState("Vigenère");
+  const [output, setOutput] = useState("");
+
+  const handleEncrypt = () => {
     let result = "";
     switch (cipher) {
-      case "caesar": result = caesarEncrypt(input, key || 3); break;
-      case "affine": result = affineEncrypt(input, key || 5, extraKey || 8); break;
-      case "vigenere": result = vigenereEncrypt(input, key || "KEY"); break;
-      case "railfence": result = railFenceEncrypt(input, key || 3); break;
-      case "columnar": result = columnarEncrypt(input, key || "3142"); break;
-      case "aes": result = cryptoJSEncrypt("AES", input, key || "pass"); break;
-      case "des": result = cryptoJSEncrypt("DES", input, key || "pass"); break;
-      case "tripledes": result = cryptoJSEncrypt("TripleDES", input, key || "pass"); break;
-      case "rc4": result = cryptoJSEncrypt("RC4", input, key || "pass"); break;
-      case "xsalsa": result = naclEncrypt(input, key || "pass"); break;
-      default: result = input;
+      case "Vigenère": result = vigenereEncrypt(plainText, key); break;
+      case "Rail Fence": result = railFenceEncrypt(plainText, key); break;
+      case "Columnar": result = columnarEncrypt(plainText, key); break;
+      case "Atbash": result = atbashEncrypt(plainText); break;
+      case "ROT13": result = rot13Encrypt(plainText); break;
+      case "Playfair": result = playfairEncrypt(plainText, key); break;
+      case "Hill": result = hillEncrypt(plainText, key); break;
+      case "Autokey": result = autokeyEncrypt(plainText, key); break;
+      case "Beaufort": result = beaufortEncrypt(plainText, key); break;
+      case "Polybius": result = polybiusEncrypt(plainText, key); break;
+      case "ADFGVX": result = adfgvxEncrypt(plainText, key); break;
+      case "Bacon": result = baconEncrypt(plainText); break;
+      case "XOR": result = xorEncrypt(plainText, key); break;
+      case "TEA": result = teaEncrypt(plainText, key); break;
+      case "AES": result = cryptoJSEncrypt("AES", plainText, key); break;
+      case "DES": result = cryptoJSEncrypt("DES", plainText, key); break;
+      case "TripleDES": result = cryptoJSEncrypt("TripleDES", plainText, key); break;
+      case "RC4": result = cryptoJSEncrypt("RC4", plainText, key); break;
+      case "Blowfish": result = blowfishEncrypt(plainText, key); break;
+      case "Twofish": result = twofishEncrypt(plainText, key); break;
+      case "RC5": result = rc5Encrypt(plainText, key); break;
+      case "ChaCha20": result = chacha20Encrypt(plainText, key); break;
+      default: result = plainText;
     }
     setOutput(result);
   };
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(output);
-    setSnackbarOpen(true);
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => setPlainText(event.target.result);
+    reader.readAsText(file);
+  };
+
+  const handleDownload = () => {
+    if (!output.trim()) return alert("Nothing to download!");
+    const blob = new Blob([output], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "encrypted_output.txt";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
-    <Box sx={{ p: 3 }}>
-      <Typography variant="h5" gutterBottom>Encrypt Text</Typography>
+    <div
+      style={{
+        maxWidth: "700px",
+        margin: "0 auto",
+        padding: "40px 20px",
+        color: darkMode ? "#fff" : "#000",
+      }}
+    >
+      <h2>Encryption</h2>
 
-      <TextField
-        fullWidth multiline rows={4}
-        label="Enter Plaintext"
-        value={input}
-        onChange={(e) => setInput(e.target.value)}
-        sx={{ mb: 2 }}
-      />
-
-      <FormControl fullWidth sx={{ mb: 2 }}>
-        <InputLabel id="cipher-select-label">Choose Cipher</InputLabel>
-        <Select
-          labelId="cipher-select-label"
-          id="cipher-select"
+      {/* Cipher Selector */}
+      <div style={{ marginBottom: "25px" }}>
+        <label style={{ fontWeight: "bold" }}>Choose Cipher</label>
+        <select
           value={cipher}
-          label="Choose Cipher"
           onChange={(e) => setCipher(e.target.value)}
+          style={{
+            width: "100%",
+            padding: "12px",
+            borderRadius: "8px",
+            border: darkMode ? "1px solid #444" : "1px solid #ccc",
+            fontSize: "16px",
+            marginTop: "8px",
+            background: darkMode ? "#121212" : "#fff",
+            color: darkMode ? "#fff" : "#000",
+            appearance: "none",
+          }}
         >
-          <MenuItem value="caesar">Caesar</MenuItem>
-          <MenuItem value="affine">Affine</MenuItem>
-          <MenuItem value="vigenere">Vigenère</MenuItem>
-          <MenuItem value="railfence">Rail Fence</MenuItem>
-          <MenuItem value="columnar">Columnar</MenuItem>
-          <MenuItem value="aes">AES</MenuItem>
-          <MenuItem value="des">DES</MenuItem>
-          <MenuItem value="tripledes">Triple DES</MenuItem>
-          <MenuItem value="rc4">RC4</MenuItem>
-          <MenuItem value="xsalsa">XSalsa20-Poly1305</MenuItem>
-        </Select>
-      </FormControl>
-      <FileHandler input={input} setInput={setInput} output={output} />
+          {cipherList.map((c) => (
+            <option
+              key={c}
+              value={c}
+              style={{
+                background: darkMode ? "#1e1e1e" : "#fff",
+                color: darkMode ? "#fff" : "#000",
+              }}
+            >
+              {c}
+            </option>
+          ))}
+        </select>
+      </div>
 
-      {(cipher === "caesar" || cipher === "railfence") && (
-        <TextField
-          type="number" label="Key (number)"
-          value={key} onChange={(e) => setKey(e.target.value)}
-          fullWidth sx={{ mb: 2 }}
+      {/* Plain Text Input */}
+      <div style={{ marginBottom: "25px" }}>
+        <label style={{ fontWeight: "bold" }}>Plain Text</label>
+        <textarea
+          rows={6}
+          value={plainText}
+          onChange={(e) => setPlainText(e.target.value)}
+          placeholder="Enter or upload text to encrypt..."
+          style={{
+            width: "100%",
+            padding: "12px",
+            borderRadius: "8px",
+            border: darkMode ? "1px solid #444" : "1px solid #ccc",
+            fontSize: "16px",
+            marginTop: "8px",
+            background: darkMode ? "#1e1e1e" : "#f3f3f3",
+            color: darkMode ? "#fff" : "#000",
+            fontFamily: "monospace",
+          }}
         />
-      )}
+        <input type="file" accept=".txt" onChange={handleFileUpload} style={{ marginTop: "10px" }} />
+      </div>
 
-      {cipher === "affine" && (
-        <Box sx={{ display: "flex", gap: 2, mb: 2 }}>
-          <TextField type="number" label="a" value={key}
-            onChange={(e) => setKey(e.target.value)} fullWidth />
-          <TextField type="number" label="b" value={extraKey}
-            onChange={(e) => setExtraKey(e.target.value)} fullWidth />
-        </Box>
-      )}
-
-      {cipher === "vigenere" && (
-        <TextField type="text" label="Key (text)"
-          value={key} onChange={(e) => setKey(e.target.value)}
-          fullWidth sx={{ mb: 2 }}
+      {/* Key Input */}
+      <div style={{ marginBottom: "25px" }}>
+        <label style={{ fontWeight: "bold" }}>Key</label>
+        <input
+          type="text"
+          value={key}
+          onChange={(e) => setKey(e.target.value)}
+          placeholder={keyExplanations[cipher] || "Enter key..."}
+          style={{
+            width: "100%",
+            padding: "12px",
+            borderRadius: "8px",
+            border: darkMode ? "1px solid #444" : "1px solid #ccc",
+            fontSize: "16px",
+            marginTop: "8px",
+            background: darkMode ? "#121212" : "#fff",
+            color: darkMode ? "#fff" : "#000",
+          }}
         />
-      )}
+      </div>
 
-      {(cipher === "aes" || cipher === "des" || cipher === "tripledes" || cipher === "rc4" || cipher === "xsalsa") && (
-        <TextField type="text" label="Passphrase"
-          value={key} onChange={(e) => setKey(e.target.value)}
-          fullWidth sx={{ mb: 2 }}
+      {/* Encrypt Button */}
+      <button
+        onClick={handleEncrypt}
+        style={{
+          width: "100%",
+          backgroundColor: "#1976d2",
+          color: "#fff",
+          border: "none",
+          padding: "16px",
+          borderRadius: "8px",
+          fontSize: "16px",
+          cursor: "pointer",
+          fontWeight: "600",
+          letterSpacing: "0.5px",
+        }}
+      >
+        ENCRYPT
+      </button>
+
+      {/* Output */}
+      <div style={{ marginTop: "30px" }}>
+        <label style={{ fontWeight: "bold" }}>Cipher Text</label>
+        <textarea
+          rows={6}
+          value={output}
+          readOnly
+          placeholder="Encrypted text will appear here..."
+          style={{
+            width: "100%",
+            padding: "12px",
+            borderRadius: "8px",
+            border: darkMode ? "1px solid #444" : "1px solid #ccc",
+            fontSize: "16px",
+            marginTop: "8px",
+            background: darkMode ? "#1e1e1e" : "#f3f3f3",
+            fontFamily: "monospace",
+            resize: "vertical",
+            color: darkMode ? "#fff" : "#000",
+          }}
         />
-      )}
+      </div>
 
-      <Button variant="contained" onClick={handleConvert} fullWidth>Encrypt</Button>
-
-      <Box sx={{ mt: 2, display: "flex", gap: 1 }}>
-        <TextField fullWidth multiline rows={4} label="Ciphertext" value={output} InputProps={{ readOnly: true }} />
-        <IconButton color="primary" onClick={handleCopy}><ContentCopyIcon /></IconButton>
-      </Box>
-
-      <Snackbar open={snackbarOpen} autoHideDuration={2000}
-        onClose={() => setSnackbarOpen(false)} message="Copied!" />
-    </Box>
+      {/* Download Button */}
+      <button
+        onClick={handleDownload}
+        style={{
+          marginTop: "15px",
+          width: "100%",
+          backgroundColor: "#2e7d32",
+          color: "#fff",
+          border: "none",
+          padding: "14px",
+          borderRadius: "8px",
+          fontSize: "16px",
+          cursor: "pointer",
+          fontWeight: "600",
+        }}
+      >
+        Download Output
+      </button>
+    </div>
   );
 }
