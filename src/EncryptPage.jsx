@@ -78,7 +78,8 @@ export default function EncryptPage({ darkMode }) {
     // If user is logged in, save to history
     const token = localStorage.getItem("token");
     if (token) {
-      fetch("http://localhost:5000/history", {
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
+      fetch(`${apiUrl}/history`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

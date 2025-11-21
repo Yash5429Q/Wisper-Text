@@ -44,7 +44,8 @@ function AppContent({ darkMode, setDarkMode }) {
     const token = localStorage.getItem("token");
     if (!token) return;
 
-    fetch("http://localhost:5000/me", {
+    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
+    fetch(`${apiUrl}/me`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => {
@@ -72,7 +73,8 @@ function AppContent({ darkMode, setDarkMode }) {
     const onLogin = () => {
       const token = localStorage.getItem("token");
       if (!token) return;
-      fetch("http://localhost:5000/me", {
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
+      fetch(`${apiUrl}/me`, {
         headers: { Authorization: `Bearer ${token}` },
       })
         .then((res) => (res.ok ? res.json() : Promise.reject(res)))

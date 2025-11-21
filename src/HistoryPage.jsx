@@ -31,7 +31,8 @@ export default function HistoryPage() {
       return;
     }
 
-    fetch("http://localhost:5000/history", {
+    const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
+    fetch(`${apiUrl}/history`, {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => {

@@ -79,7 +79,8 @@ export default function SmartDecryptPage() {
         .join("\n\n")
         .substring(0, 500); // Store first 500 characters
 
-      fetch("http://localhost:5000/history", {
+      const apiUrl = import.meta.env.VITE_API_URL || "http://localhost:5000";
+      fetch(`${apiUrl}/history`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
