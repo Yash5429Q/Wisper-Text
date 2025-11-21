@@ -3,7 +3,7 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import express from "express";
 import dotenv from "dotenv";
-import mysql from "mysql2";
+import mongoose from "mongoose";
 import cors from "cors";
 
 
@@ -16,26 +16,32 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 
-// MySQL connection setup
-const db = mysql.createConnection({
-  host: "localhost",
-  user: "root",
-  password: "root",
-  database: "wisphertext_db",
-});
+mongoose.connect(process.env.MONGO_URI)
+.then(() => console.log("✅ Connected to MongoDB Atlas"))
+.catch((err) => console.error("❌ MongoDB Connection Error:", err));
 
-// Connect to MySQL
-db.connect((err) => {
-  if (err) {
-    console.error("❌ Database connection failed:", err);
-  } else {
-    console.log("✅ Connected to MySQL database successfully!");
-  }
+const userSchema = new mongoose.Schema({
+  username: String,
+  email: { type: String, unique: true },
+  password: String,
 });
+const User = mongoose.model("User", userSchema);
+
+const historySchema = new mongoose.Schema({
+  user_id: String,
+  operation_type: String,
+  algorithm: String,
+  input_text: String,
+  output_text: String,
+  key_used: String,
+  created_at: { type: Date, default: Date.now },
+});
+const History = mongoose.model("History", historySchema);
+
 
 // ✅ Route: Test route
 app.get("/", (req, res) => {
-  res.send("Backend server connected with MySQL successfully!");
+  res.send("Backend server connected with MongoDB successfully!");
 });
 
 // Route: Add new user (with encrypted password)
@@ -47,74 +53,67 @@ app.post("/register", async (req, res) => {
   }
 
   try {
-    // Encrypt password before saving
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const query = "INSERT INTO users (username, email, password) VALUES (?, ?, ?)";
-    db.query(query, [username, email, hashedPassword], (err) => {
-      if (err) {
-        console.error("Error inserting user:", err);
-        return res.status(500).json({ error: "Database error" });
-      }
-      res.status(201).json({ message: "User registered successfully with encrypted password!" });
+    const newUser = new User({
+      username,
+      email,
+      password: hashedPassword
     });
+
+    await newUser.save();
+    res.status(201).json({ message: "User registered successfully!" });
+
   } catch (error) {
-    console.error("Encryption error:", error);
-    res.status(500).json({ error: "Internal server error" });
+    console.error("Registration error:", error);
+    res.status(500).json({ error: "Email already exists or DB error" });
   }
 });
 // Route: User login with JWT
-app.post("/login", (req, res) => {
+app.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
     return res.status(400).json({ error: "Email and password are required" });
   }
 
-  const query = "SELECT * FROM users WHERE email = ?";
-  db.query(query, [email], async (err, results) => {
-    if (err) {
-      console.error("Database error:", err);
-      return res.status(500).json({ error: "Database error" });
-    }
+  try {
+    const user = await User.findOne({ email });
 
-    if (results.length === 0) {
-      return res.status(404).json({ error: "User not found" });
-    }
+    if (!user) return res.status(404).json({ error: "User not found" });
 
-    const user = results[0];
     const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return res.status(401).json({ error: "Invalid credentials" });
 
-    if (!isMatch) {
-      return res.status(401).json({ error: "Invalid credentials" });
-    }
-
-    // Generate JWT Token (expires in 1 hour)
     const token = jwt.sign(
-      { id: user.id, email: user.email },
-      globalThis.process.env.JWT_SECRET,
+      { id: user._id, email: user.email },
+      process.env.JWT_SECRET,
       { expiresIn: "1h" }
     );
 
     res.json({
       message: "Login successful!",
       token,
-      user: { id: user.id, username: user.username, email: user.email }
+      user: { id: user._id, username: user.username, email: user.email }
     });
-  });
+
+  } catch (err) {
+    console.error("Login error:", err);
+    res.status(500).json({ error: "Internal server error" });
+  }
 });
 
 
 
 // ✅ Route: Get all users
-app.get("/users", (req, res) => {
-  db.query("SELECT * FROM users", (err, results) => {
-    if (err) {
-      console.error("Error fetching users:", err);
-      return res.status(500).json({ error: "Database error" });
-    }
-    res.json(results);
-  });
+app.get("/users", async (req, res) => {
+  try {
+    const users = await User.find().select("-password");
+    res.json(users);
+  } catch (err) {
+    console.error("Error fetching users:", err);
+    res.status(500).json({ error: "Database error" });
+  }
 });
 
 // Authentication middleware
@@ -126,8 +125,8 @@ const authenticateToken = (req, res, next) => {
 
   const token = authHeader.split(" ")[1];
   try {
-    const decoded = jwt.verify(token, globalThis.process.env.JWT_SECRET);
-    req.userId = decoded.id; // Add user ID to request object
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    req.userId = decoded.id;
     next();
   } catch (err) {
     console.error("JWT verify error:", err);
@@ -136,46 +135,37 @@ const authenticateToken = (req, res, next) => {
 };
 
 // Route: Save encryption/decryption operation to history
-app.post("/history", authenticateToken, (req, res) => {
+app.post("/history", authenticateToken, async (req, res) => {
   const { operation, algorithm, input, output, key } = req.body;
-  const userId = req.userId;
 
-  const query = `
-    INSERT INTO encryption_history 
-    (user_id, operation_type, algorithm, input_text, output_text, key_used) 
-    VALUES (?, ?, ?, ?, ?, ?)
-  `;
+  try {
+    const entry = new History({
+      user_id: req.userId,
+      operation_type: operation,
+      algorithm,
+      input_text: input,
+      output_text: output,
+      key_used: key
+    });
 
-  db.query(
-    query,
-    [userId, operation, algorithm, input, output, key],
-    (err) => {
-      if (err) {
-        console.error("Error saving to history:", err);
-        return res.status(500).json({ error: "Database error" });
-      }
-      res.status(201).json({ message: "Operation saved to history" });
-    }
-  );
+    await entry.save();
+    res.status(201).json({ message: "History saved!" });
+
+  } catch (err) {
+    console.error("History save error:", err);
+    res.status(500).json({ error: "Database error" });
+  }
 });
 
 // Route: Get user's encryption/decryption history
-app.get("/history", authenticateToken, (req, res) => {
-  const userId = req.userId;
-
-  const query = `
-    SELECT * FROM encryption_history 
-    WHERE user_id = ? 
-    ORDER BY created_at DESC
-  `;
-
-  db.query(query, [userId], (err, results) => {
-    if (err) {
-      console.error("Error fetching history:", err);
-      return res.status(500).json({ error: "Database error" });
-    }
+app.get("/history", authenticateToken, async (req, res) => {
+  try {
+    const results = await History.find({ user_id: req.userId }).sort({ created_at: -1 });
     res.json(results);
-  });
+  } catch (err) {
+    console.error("History fetch error:", err);
+    res.status(500).json({ error: "Database error" });
+  }
 });
 
 // Start server
@@ -185,31 +175,15 @@ app.listen(PORT, () => {
 });
 
 // Route: Get current user from JWT
-app.get("/me", (req, res) => {
-  const authHeader = req.headers.authorization;
-  if (!authHeader || !authHeader.startsWith("Bearer ")) {
-    return res.status(401).json({ error: "Authorization token missing" });
-  }
-
-  const token = authHeader.split(" ")[1];
+app.get("/me", authenticateToken, async (req, res) => {
   try {
-  const decoded = jwt.verify(token, globalThis.process.env.JWT_SECRET);
-    const userId = decoded.id;
-
-    const query = "SELECT id, username, email FROM users WHERE id = ?";
-    db.query(query, [userId], (err, results) => {
-      if (err) {
-        console.error("Database error in /me:", err);
-        return res.status(500).json({ error: "Database error" });
-      }
-      if (!results || results.length === 0) {
-        return res.status(404).json({ error: "User not found" });
-      }
-      // Return user record (without password)
-      return res.json({ user: results[0] });
-    });
+    const user = await User.findById(req.userId).select("-password");
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+    res.json({ user });
   } catch (err) {
-    console.error("JWT verify error:", err);
-    return res.status(401).json({ error: "Invalid or expired token" });
+    console.error("Database error in /me:", err);
+    res.status(500).json({ error: "Database error" });
   }
 });
