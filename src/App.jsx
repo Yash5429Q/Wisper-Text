@@ -118,20 +118,21 @@ function AppContent({ darkMode, setDarkMode }) {
           borderBottom: darkMode
             ? "2px solid rgba(0, 212, 255, 0.3)"
             : "2px solid rgba(0, 102, 204, 0.15)",
-          py: 1.5,
-          px: 3,
+          py: { xs: 1, sm: 1.5 },
+          px: { xs: 1, sm: 2, md: 3 },
           zIndex: 1200,
           display: "flex",
+          flexDirection: { xs: "column", md: "row" },
           alignItems: "center",
-          justifyContent: "space-between",
-          gap: 2,
+          justifyContent: { xs: "center", md: "space-between" },
+          gap: { xs: 1, sm: 2 },
         }}
       >
         {/* Title - Left */}
-        <Box sx={{ display: "flex", flexDirection: "column", minWidth: 200 }}>
+        <Box sx={{ display: "flex", flexDirection: "column", minWidth: { xs: "auto", md: 200 }, alignItems: "center", mb: { xs: 1, md: 0 } }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
             <span style={{
-              fontSize: "2.5rem",
+              fontSize: "clamp(1.5rem, 5vw, 2.5rem)",
               filter: darkMode
                 ? "drop-shadow(0 0 8px rgba(0, 212, 255, 0.6)) drop-shadow(0 0 16px rgba(255, 0, 110, 0.3))"
                 : "drop-shadow(0 0 8px rgba(0, 102, 204, 0.4)) drop-shadow(0 0 16px rgba(255, 0, 80, 0.2))",
@@ -150,9 +151,10 @@ function AppContent({ darkMode, setDarkMode }) {
                 WebkitTextFillColor: "transparent",
                 textShadow: "none",
                 fontWeight: 900,
-                letterSpacing: "1.5px",
+                letterSpacing: { xs: "0.5px", md: "1.5px" },
                 textTransform: "uppercase",
                 filter: "drop-shadow(0 2px 4px rgba(0, 0, 0, 0.1))",
+                fontSize: { xs: "1.5rem", sm: "2rem", md: "2.5rem" },
               }}
             >
               WhisperText
@@ -162,7 +164,7 @@ function AppContent({ darkMode, setDarkMode }) {
             variant="subtitle2" 
             sx={{
               color: darkMode ? "rgba(0, 212, 255, 0.8)" : "rgba(0, 102, 204, 0.75)",
-              fontSize: "0.85rem",
+              fontSize: { xs: "0.65rem", sm: "0.75rem", md: "0.85rem" },
               fontWeight: 600,
               letterSpacing: "0.8px",
               textTransform: "uppercase",
@@ -173,7 +175,7 @@ function AppContent({ darkMode, setDarkMode }) {
         </Box>
 
         {/* Navigation Buttons - Center */}
-        <Box sx={{ display: "flex", alignItems: "center", gap: 1, flex: 1, justifyContent: "center" }}>
+        <Box sx={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: { xs: 0.5, sm: 1 }, flex: 1, justifyContent: "center" }}>
           <Button
             component={Link}
             to="/"
@@ -245,11 +247,12 @@ function AppContent({ darkMode, setDarkMode }) {
           sx={{
             display: "flex",
             alignItems: "center",
-            gap: 1.5,
-            minWidth: 200,
-            justifyContent: "flex-end",
-            ml: 10,
-            pr: 5,
+            gap: { xs: 0.5, sm: 1.5 },
+            minWidth: { xs: "auto", md: 200 },
+            justifyContent: { xs: "center", md: "flex-end" },
+            ml: { xs: 0, md: 10 },
+            pr: { xs: 0, md: 5 },
+            flexWrap: "wrap",
           }}
         >
           {/* Dark mode toggle */}
@@ -257,11 +260,11 @@ function AppContent({ darkMode, setDarkMode }) {
 
           {/* If logged in show avatar + username + logout, otherwise show login/signup */}
           {isLoggedIn ? (
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: { xs: 0.5, sm: 1 }, flexWrap: "wrap", justifyContent: "center" }}>
               <Avatar
                 sx={{
-                  width: 40,
-                  height: 40,
+                  width: { xs: 32, sm: 40 },
+                  height: { xs: 32, sm: 40 },
                   background: darkMode
                     ? "linear-gradient(135deg, #00d4ff 0%, #ff006e 100%)"
                     : "linear-gradient(135deg, #0066cc 0%, #ff0050 100%)",
@@ -278,7 +281,7 @@ function AppContent({ darkMode, setDarkMode }) {
               <Typography 
                 variant="body2" 
                 sx={{ 
-                  minWidth: 80, 
+                  minWidth: { xs: "auto", sm: 80 }, 
                   textAlign: "left",
                   fontWeight: 600,
                   background: darkMode
@@ -287,6 +290,8 @@ function AppContent({ darkMode, setDarkMode }) {
                   backgroundClip: "text",
                   WebkitBackgroundClip: "text",
                   WebkitTextFillColor: "transparent",
+                  fontSize: { xs: "0.75rem", sm: "1rem" },
+                  display: { xs: "none", sm: "block" },
                 }}
               >
                 {user && user.username ? user.username : "User"}
@@ -314,11 +319,17 @@ function AppContent({ darkMode, setDarkMode }) {
               <Button
                 component={Link}
                 to="/login"
-                variant="outlined"
+                variant="contained"
                 size="small"
                 sx={{
-                  borderColor: darkMode ? "#00d4ff" : "#0066cc",
-                  color: darkMode ? "#00d4ff" : "#0066cc",
+                  background: darkMode
+                    ? "linear-gradient(135deg, #00d4ff 0%, #0066cc 100%)"
+                    : "linear-gradient(135deg, #0066cc 0%, #003d99 100%)",
+                  color: "#ffffff",
+                  fontWeight: 500,
+                  "&:hover": {
+                    opacity: 0.9,
+                  },
                 }}
               >
                 Login
@@ -347,7 +358,7 @@ function AppContent({ darkMode, setDarkMode }) {
       {/* Navigation Bar - REMOVED (now in header) */}
 
       {/* Main Content */}
-      <Box sx={{ pt: 10, px: 3 }}>
+      <Box sx={{ pt: { xs: 18, sm: 16, md: 14 }, px: { xs: 1.5, sm: 2, md: 3 } }}>
         <Routes>
           <Route
             path="/"
