@@ -30,7 +30,8 @@ const AdminDashboard = ({ user, darkMode }) => {
       setLoading(true);
       setError(null);
 
-      const token = localStorage.getItem("authToken");
+      const token = localStorage.getItem("token");
+
 
       // Fetch user statistics
       const userRes = await fetch(`${apiUrl}/admin/analytics/users`, {
