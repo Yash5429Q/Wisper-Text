@@ -15,6 +15,7 @@ import EncryptPage from "./EncryptPage";
 import DecryptPage from "./DecryptPage";
 import SmartDecryptPage from "./SmartDecryptPage";
 import HistoryPage from "./HistoryPage";
+import AdminDashboard from "./AdminDashboard";
 import LoginPage from "./components/Login";
 import SignupPage from "./components/Signup";
 
@@ -240,6 +241,23 @@ function AppContent({ darkMode, setDarkMode }) {
               📜 History
             </Button>
           )}
+          {isLoggedIn && user?.role === "admin" && (
+            <Button
+              component={Link}
+              to="/admin"
+              variant={location.pathname === "/admin" ? "contained" : "outlined"}
+              size="small"
+              sx={{
+                background: location.pathname === "/admin"
+                  ? darkMode
+                    ? "linear-gradient(135deg, #ff006e 0%, #ff0050 100%)"
+                    : "linear-gradient(135deg, #ff0050 0%, #cc003d 100%)"
+                  : "transparent",
+              }}
+            >
+              ⚙️ Admin
+            </Button>
+          )}
         </Box>
 
         {/* Right-side buttons */}
@@ -381,6 +399,16 @@ function AppContent({ darkMode, setDarkMode }) {
                 <HistoryPage />
               ) : (
                 <Navigate to="/login" replace />
+              )
+            }
+          />
+          <Route
+            path="/admin"
+            element={
+              isLoggedIn && user?.role === "admin" ? (
+                <AdminDashboard user={user} darkMode={darkMode} />
+              ) : (
+                <Navigate to="/" replace />
               )
             }
           />

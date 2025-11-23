@@ -33,12 +33,14 @@ export default function Signup() {
   };
 
   return (
-    <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
-      <Paper elevation={4} sx={{ p: 4, width: 350, textAlign: "center" }}>
-        <Typography variant="h5" gutterBottom>
-          Create Account ✨
-        </Typography>
+  <Box sx={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100vh" }}>
+    <Paper elevation={4} sx={{ p: 4, width: 350, textAlign: "center" }}>
+      <Typography variant="h5" gutterBottom>
+        Create Account ✨
+      </Typography>
 
+      {/* FORM START */}
+      <form onSubmit={(e) => { e.preventDefault(); handleSignup(); }}>
         <TextField
           label="Username"
           fullWidth
@@ -46,6 +48,7 @@ export default function Signup() {
           value={username}
           onChange={(e) => setUsername(e.target.value)}
         />
+
         <TextField
           label="Email"
           type="email"
@@ -54,6 +57,7 @@ export default function Signup() {
           value={email}
           onChange={(e) => setEmail(e.target.value)}
         />
+
         <TextField
           label="Password"
           type="password"
@@ -69,17 +73,25 @@ export default function Signup() {
           </Typography>
         )}
 
-        <Button variant="contained" fullWidth sx={{ mt: 2 }} onClick={handleSignup}>
+        <Button
+          type="submit"
+          variant="contained"
+          fullWidth
+          sx={{ mt: 2 }}
+        >
           Sign Up
         </Button>
+      </form>
+      {/* FORM END */}
 
-        <Typography variant="body2" sx={{ mt: 2 }}>
-          Already have an account?{" "}
-          <Link href="/login" underline="hover">
-            Log in
-          </Link>
-        </Typography>
-      </Paper>
-    </Box>
-  );
+      <Typography variant="body2" sx={{ mt: 2 }}>
+        Already have an account?{" "}
+        <Link href="/login" underline="hover">
+          Log in
+        </Link>
+      </Typography>
+    </Paper>
+  </Box>
+);
+
 }
